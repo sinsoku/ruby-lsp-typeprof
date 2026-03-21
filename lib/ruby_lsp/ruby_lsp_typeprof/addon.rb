@@ -21,7 +21,11 @@ module RubyLsp
         @mutex.synchronize do
           @service = TypeProf::Core::Service.new({})
           workspace_path = global_state.workspace_path
-          @service.add_workspace(workspace_path, workspace_path)
+          begin
+            @service.add_workspace(workspace_path, workspace_path)
+          rescue StandardError => e
+            warn "ruby-lsp-typeprof: Workspace analysis failed (some features may be limited): #{e.message}"
+          end
         end
       rescue LoadError
         warn "ruby-lsp-typeprof: TypeProf is not installed. Addon disabled."
