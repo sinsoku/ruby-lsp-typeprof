@@ -1,34 +1,45 @@
-# Ruby::Lsp::Typeprof
+# ruby-lsp-typeprof
 
-TODO: Delete this and the text below, and describe your gem
+A [Ruby LSP](https://github.com/Shopify/ruby-lsp) addon that integrates [TypeProf v2](https://github.com/ruby/typeprof) type inference into your editor. Get type information on hover without explicit type annotations.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/ruby/lsp/typeprof`. To experiment with that code, run `bin/console` for an interactive prompt.
+## Requirements
+
+- Ruby >= 3.3.0
+- [TypeProf](https://github.com/ruby/typeprof) v2
+- [Ruby LSP](https://github.com/Shopify/ruby-lsp)
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+Add the gem to your application's Gemfile:
 
-Install the gem and add to the application's Gemfile by executing:
-
-```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+```ruby
+group :development do
+  gem "ruby-lsp-typeprof"
+end
 ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+Then run:
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+bundle install
 ```
 
 ## Usage
 
-TODO: Write usage instructions here
+Once installed, the addon is automatically detected by Ruby LSP. No additional configuration is required.
+
+Hover over variables and method calls in your Ruby files to see TypeProf's inferred type information alongside Ruby LSP's built-in hover results.
 
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```bash
+bin/setup       # Install dependencies
+rake test       # Run tests
+rake rubocop    # Run linter
+rake            # Run tests + linter
+```
 
 ## Contributing
 
@@ -40,4 +51,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the Ruby::Lsp::Typeprof project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/sinsoku/ruby-lsp-typeprof/blob/main/CODE_OF_CONDUCT.md).
+Everyone interacting in the ruby-lsp-typeprof project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/sinsoku/ruby-lsp-typeprof/blob/main/CODE_OF_CONDUCT.md).

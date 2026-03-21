@@ -2,14 +2,20 @@
 
 require "test_helper"
 
-class Ruby::Lsp::TypeprofTest < Test::Unit::TestCase
-  test "VERSION" do
-    assert do
-      ::Ruby::Lsp::Typeprof.const_defined?(:VERSION)
-    end
-  end
+module Ruby
+  module Lsp
+    class TypeprofTest < Test::Unit::TestCase
+      test "VERSION" do
+        assert do
+          ::Ruby::Lsp::Typeprof.const_defined?(:VERSION)
+        end
+      end
 
-  test "something useful" do
-    assert_equal("expected", "actual")
+      test "Error class is defined" do
+        assert do
+          ::Ruby::Lsp::Typeprof.const_defined?(:Error)
+        end
+      end
+    end
   end
 end

@@ -6,7 +6,8 @@ module Ruby
   module Lsp
     module Typeprof
       class Error < StandardError; end
-      # Your code goes here...
     end
   end
 end
+
+require_relative "typeprof/hover_listener"
