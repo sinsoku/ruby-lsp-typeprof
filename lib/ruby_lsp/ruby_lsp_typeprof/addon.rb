@@ -18,18 +18,9 @@ module RubyLsp
 
         require "typeprof"
 
-        @mutex.synchronize do
-          @service = TypeProf::Core::Service.new({})
-          workspace_path = global_state.workspace_path
-          begin
-            @service.add_workspace(workspace_path, workspace_path)
-          rescue StandardError => e
-            warn "ruby-lsp-typeprof: Workspace analysis failed (some features may be limited): #{e.message}"
-          end
-        end
+        @service = initialize_service(global_state.workspace_path)
       rescue LoadError
         warn "ruby-lsp-typeprof: TypeProf is not installed. Addon disabled."
-        @service = nil
       rescue StandardError => e
         warn "ruby-lsp-typeprof: Failed to activate: #{e.message}"
         @service = nil
@@ -75,6 +66,29 @@ module RubyLsp
 
       private
 
+      def initialize_service(workspace_path)
+        conf = load_typeprof_conf(workspace_path)
+
+        unless conf
+          warn "ruby-lsp-typeprof: typeprof.conf.json(c) not found in #{workspace_path}. Addon disabled."
+          return
+        end
+
+        options = {}
+        options[:exclude_patterns] = conf[:exclude] if conf[:exclude]
+        rbs_dir = File.expand_path(conf[:rbs_dir] || "sig", workspace_path)
+
+        @mutex.synchronize do
+          service = nil
+          (conf[:analysis_unit_dirs] || ["lib"]).each do |dir|
+            dir = File.expand_path(dir, workspace_path)
+            service = TypeProf::Core::Service.new(options)
+            service.add_workspace(dir, rbs_dir)
+          end
+          service
+        end
+      end
+
       def send_status_notification(message)
         return unless @outgoing_queue
 
@@ -84,6 +98,17 @@ module RubyLsp
         }
       rescue StandardError
         # Silently ignore notification failures
+      end
+
+      def load_typeprof_conf(workspace_path)
+        conf_path = [".json", ".jsonc"].filter_map do |ext|
+          path = File.join(workspace_path, "typeprof.conf#{ext}")
+          path if File.readable?(path)
+        end.first
+
+        return unless conf_path
+
+        TypeProf::LSP.load_json_with_comments(conf_path, symbolize_names: true)
       end
     end
   end
