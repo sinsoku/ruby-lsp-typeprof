@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "uri"
 require "ruby_lsp/addon"
 require "ruby/lsp/typeprof"
 
@@ -11,14 +12,15 @@ module RubyLsp
         @service = nil
         @mutex = Mutex.new
         @outgoing_queue = nil
+        @diagnostic_severity = :error
       end
 
       def activate(global_state, outgoing_queue)
         @outgoing_queue = outgoing_queue
-
         require "typeprof"
 
         @service = initialize_service(global_state.workspace_path)
+        publish_diagnostics_for_all_files if @service
       rescue LoadError
         warn "ruby-lsp-typeprof: TypeProf is not installed. Addon disabled."
       rescue StandardError => e
@@ -52,10 +54,11 @@ module RubyLsp
         @mutex.synchronize do
           changes.each do |change|
             uri = change[:uri]
-            path = URI(uri).path
+            path = URI.parse(uri).path
             next unless path&.end_with?(".rb", ".rbs")
 
             @service.update_file(path, nil)
+            publish_diagnostics(uri.to_s, path)
           rescue StandardError => e
             warn "ruby-lsp-typeprof: Failed to update file #{path}: #{e.message}"
           end
@@ -78,6 +81,11 @@ module RubyLsp
         options[:exclude_patterns] = conf[:exclude] if conf[:exclude]
         rbs_dir = File.expand_path(conf[:rbs_dir] || "sig", workspace_path)
 
+        if conf[:diagnostic_severity]
+          severity = conf[:diagnostic_severity].to_sym
+          @diagnostic_severity = severity if %i[error warning info hint].include?(severity)
+        end
+
         @mutex.synchronize do
           service = nil
           (conf[:analysis_unit_dirs] || ["lib"]).each do |dir|
@@ -87,6 +95,41 @@ module RubyLsp
           end
           service
         end
+      end
+
+      def publish_diagnostics_for_all_files
+        @mutex.synchronize do
+          paths = @service.instance_variable_get(:@rb_text_nodes).keys
+          paths.each do |path|
+            uri = "file://#{path}"
+            publish_diagnostics(uri, path)
+          rescue StandardError => e
+            warn "ruby-lsp-typeprof: Failed to publish initial diagnostics for #{path}: #{e.message}"
+          end
+        end
+      end
+
+      def publish_diagnostics(uri, path)
+        diagnostics = []
+        @service.diagnostics(path) do |diag|
+          diagnostics << diag.to_lsp(severity: @diagnostic_severity)
+        end
+
+        send_diagnostics_notification(uri, diagnostics)
+      rescue StandardError => e
+        warn "ruby-lsp-typeprof: Failed to publish diagnostics: #{e.message}"
+        send_diagnostics_notification(uri, [])
+      end
+
+      def send_diagnostics_notification(uri, diagnostics)
+        return unless @outgoing_queue
+
+        @outgoing_queue << {
+          method: "textDocument/publishDiagnostics",
+          params: { uri: uri, diagnostics: diagnostics }
+        }
+      rescue StandardError
+        # Silently ignore notification failures
       end
 
       def send_status_notification(message)
