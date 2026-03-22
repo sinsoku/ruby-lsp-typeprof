@@ -46,6 +46,12 @@ module RubyLsp
         Ruby::Lsp::Typeprof::HoverListener.new(response_builder, node_context, dispatcher, @service, @mutex)
       end
 
+      def create_completion_listener(response_builder, node_context, dispatcher, uri)
+        return unless @service
+
+        Ruby::Lsp::Typeprof::CompletionListener.new(response_builder, node_context, dispatcher, uri, @service, @mutex)
+      end
+
       def create_code_lens_listener(response_builder, uri, dispatcher)
         return unless @service
 
