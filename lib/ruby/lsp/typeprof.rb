@@ -11,3 +11,4 @@ module Ruby
 end
 
 require_relative "typeprof/hover_listener"
+require_relative "typeprof/definition_listener"
