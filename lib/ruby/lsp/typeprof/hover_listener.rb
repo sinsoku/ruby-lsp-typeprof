@@ -9,8 +9,9 @@ module Ruby
           @node_context = node_context
           @service = service
           @mutex = mutex
+          @path = find_path_from_node(node_context, service)
 
-          return unless @service
+          return unless @service && @path
 
           dispatcher.register(
             self,
@@ -50,12 +51,14 @@ module Ruby
         private
 
         def handle_hover(node)
-          return unless @service
+          return unless @service && @path
 
           location = node.location
           pos = TypeProf::CodePosition.new(location.start_line, location.start_column)
 
-          result = try_hover_all_files(pos)
+          result = @mutex.synchronize do
+            @service.hover(@path, pos)
+          end
 
           return unless result
           return if result.start_with?("???")
@@ -68,18 +71,21 @@ module Ruby
           warn "ruby-lsp-typeprof: Hover error: #{e.message}"
         end
 
-        def try_hover_all_files(pos)
-          @mutex.synchronize do
-            # TypeProf::Core::Service stores analyzed files in @rb_text_nodes
-            paths = @service.instance_variable_get(:@rb_text_nodes).keys
-            paths.each do |path|
-              result = @service.hover(path, pos)
-              return result if result && !result.start_with?("???")
-            rescue StandardError
-              next
-            end
-            nil
+        def find_path_from_node(node_context, service)
+          node = node_context.node
+          return unless node
+
+          source_lines = node.location.source_lines
+          return if source_lines.empty?
+
+          source_text = source_lines.join
+
+          paths = service.instance_variable_get(:@rb_text_nodes).keys
+          paths.find do |path|
+            File.readable?(path) && File.read(path) == source_text
           end
+        rescue StandardError
+          nil
         end
       end
     end
