@@ -11,7 +11,7 @@ module Ruby
           @mutex = mutex
           @path = find_path_from_node(node_context, service)
 
-          return unless @service && @path
+          return unless @service
 
           dispatcher.register(
             self,
@@ -51,14 +51,16 @@ module Ruby
         private
 
         def handle_hover(node)
-          return unless @service && @path
+          return unless @service
 
           location = node.location
           pos = TypeProf::CodePosition.new(location.start_line, location.start_column)
 
-          result = @mutex.synchronize do
-            @service.hover(@path, pos)
-          end
+          result = if @path
+                     @mutex.synchronize { @service.hover(@path, pos) }
+                   else
+                     try_hover_all_files(pos)
+                   end
 
           return unless result
           return if result.start_with?("???")
@@ -75,10 +77,8 @@ module Ruby
           node = node_context.node
           return unless node
 
-          source_lines = node.location.source_lines
-          return if source_lines.empty?
-
-          source_text = source_lines.join
+          source_text = node.location.source_lines.join
+          return if source_text.empty?
 
           paths = service.instance_variable_get(:@rb_text_nodes).keys
           paths.find do |path|
@@ -86,6 +86,24 @@ module Ruby
           end
         rescue StandardError
           nil
+        end
+
+        def try_hover_all_files(pos)
+          @mutex.synchronize do
+            paths = @service.instance_variable_get(:@rb_text_nodes).keys
+            best = nil
+            paths.each do |path|
+              result = @service.hover(path, pos)
+              next unless result && !result.start_with?("???")
+              # Prefer specific types over "untyped"
+              return result unless result == "untyped"
+
+              best ||= result
+            rescue StandardError
+              next
+            end
+            best
+          end
         end
       end
     end
