@@ -22,12 +22,12 @@ module Ruby
           hint = @lens_cache[line]
           return unless hint
 
-          @response_builder << Interface::CodeLens.new(
-            range: Interface::Range.new(
-              start: Interface::Position.new(line: line - 1, character: 0),
-              end: Interface::Position.new(line: line - 1, character: 0)
+          @response_builder << LanguageServer::Protocol::Interface::CodeLens.new(
+            range: LanguageServer::Protocol::Interface::Range.new(
+              start: LanguageServer::Protocol::Interface::Position.new(line: line - 1, character: 0),
+              end: LanguageServer::Protocol::Interface::Position.new(line: line - 1, character: 0)
             ),
-            command: Interface::Command.new(
+            command: LanguageServer::Protocol::Interface::Command.new(
               title: "#: #{hint}",
               command: ""
             )

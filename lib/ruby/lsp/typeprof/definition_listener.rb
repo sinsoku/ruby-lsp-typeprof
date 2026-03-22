@@ -53,11 +53,13 @@ module Ruby
 
         def push_location(def_path, code_range)
           range = code_range.to_lsp
-          @response_builder << Interface::Location.new(
+          @response_builder << LanguageServer::Protocol::Interface::Location.new(
             uri: "file://#{def_path}",
-            range: Interface::Range.new(
-              start: Interface::Position.new(line: range[:start][:line], character: range[:start][:character]),
-              end: Interface::Position.new(line: range[:end][:line], character: range[:end][:character])
+            range: LanguageServer::Protocol::Interface::Range.new(
+              start: LanguageServer::Protocol::Interface::Position.new(line: range[:start][:line],
+                                                                       character: range[:start][:character]),
+              end: LanguageServer::Protocol::Interface::Position.new(line: range[:end][:line],
+                                                                     character: range[:end][:character])
             )
           )
         end
