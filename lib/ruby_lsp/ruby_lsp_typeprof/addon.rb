@@ -17,11 +17,10 @@ module RubyLsp
 
       def activate(global_state, outgoing_queue)
         @outgoing_queue = outgoing_queue
-        warn "ruby-lsp-typeprof: Activating TypeProf addon..."
-
         require "typeprof"
 
         @service = initialize_service(global_state.workspace_path)
+        publish_diagnostics_for_all_files if @service
       rescue LoadError
         warn "ruby-lsp-typeprof: TypeProf is not installed. Addon disabled."
       rescue StandardError => e
@@ -95,6 +94,18 @@ module RubyLsp
             service.add_workspace(dir, rbs_dir)
           end
           service
+        end
+      end
+
+      def publish_diagnostics_for_all_files
+        @mutex.synchronize do
+          paths = @service.instance_variable_get(:@rb_text_nodes).keys
+          paths.each do |path|
+            uri = "file://#{path}"
+            publish_diagnostics(uri, path)
+          rescue StandardError => e
+            warn "ruby-lsp-typeprof: Failed to publish initial diagnostics for #{path}: #{e.message}"
+          end
         end
       end
 
