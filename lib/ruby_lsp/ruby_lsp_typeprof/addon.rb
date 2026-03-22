@@ -46,6 +46,12 @@ module RubyLsp
         Ruby::Lsp::Typeprof::HoverListener.new(response_builder, node_context, dispatcher, @service, @mutex)
       end
 
+      def create_code_lens_listener(response_builder, uri, dispatcher)
+        return unless @service
+
+        Ruby::Lsp::Typeprof::CodeLensListener.new(response_builder, uri, dispatcher, @service, @mutex)
+      end
+
       def create_definition_listener(response_builder, uri, node_context, dispatcher)
         return unless @service
 
