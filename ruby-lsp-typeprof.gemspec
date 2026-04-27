@@ -1,22 +1,23 @@
 # frozen_string_literal: true
 
-require_relative "lib/ruby/lsp/typeprof/version"
+require_relative "lib/ruby_lsp_typeprof/version"
 
 Gem::Specification.new do |spec|
   spec.name = "ruby-lsp-typeprof"
-  spec.version = Ruby::Lsp::Typeprof::VERSION
+  spec.version = RubyLsp::Typeprof::VERSION
   spec.authors = ["Takumi Shotoku"]
   spec.email = ["sinsoku.listy@gmail.com"]
 
-  spec.summary = "TODO: Write a short summary, because RubyGems requires one."
-  spec.description = "TODO: Write a longer description or delete this line."
+  spec.summary = "A Ruby LSP addon for TypeProf"
+  spec.description = "A Ruby LSP addon that integrates TypeProf to provide type inference features."
   spec.homepage = "https://github.com/sinsoku/ruby-lsp-typeprof"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
-  spec.metadata["allowed_push_host"] = "TODO: Set to your gem server 'https://example.com'"
+  spec.required_ruby_version = ">= 3.3.0"
+
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/sinsoku/ruby-lsp-typeprof"
-  spec.metadata["changelog_uri"] = "https://github.com/sinsoku/ruby-lsp-typeprof/blob/main/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/v#{spec.version}"
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/v#{spec.version}/CHANGELOG.md"
+  spec.metadata["rubygems_mfa_required"] = "true"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
@@ -31,9 +32,6 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Uncomment to register a new dependency of your gem
-  # spec.add_dependency "example-gem", "~> 1.0"
-
-  # For more information and examples about making a new gem, check out our
-  # guide at: https://bundler.io/guides/creating_gem.html
+  spec.add_dependency "ruby-lsp", ">= 0.26.0"
+  spec.add_dependency "typeprof", ">= 0.31.1"
 end

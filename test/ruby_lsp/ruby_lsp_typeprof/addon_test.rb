@@ -1,0 +1,59 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+module RubyLsp
+  module Typeprof
+    class AddonTest < Test::Unit::TestCase
+      include CaptureStderr
+
+      def setup
+        @addon = Addon.new
+      end
+
+      test "addon has correct name" do
+        assert_equal "TypeProf", @addon.name
+      end
+
+      test "addon has correct version" do
+        assert_equal VERSION, @addon.version
+      end
+
+      test "deactivate clears service" do
+        @addon.deactivate
+        assert_nil @addon.instance_variable_get(:@service)
+      end
+
+      test "workspace_did_change_watched_files ignores non-ruby files" do
+        updated_paths = []
+        mock_service = stub(:update_file)
+        mock_service.stubs(:update_file).with { |path, _code| updated_paths << path }
+
+        addon = Addon.new
+        addon.instance_variable_set(:@service, mock_service)
+
+        changes = [
+          { uri: "file:///tmp/test.txt", type: 2 },
+          { uri: "file:///tmp/test.rb", type: 2 }
+        ]
+        addon.workspace_did_change_watched_files(changes)
+
+        assert_equal ["/tmp/test.rb"], updated_paths
+      end
+
+      test "workspace_did_change_watched_files handles exceptions safely" do
+        mock_service = stub(:update_file)
+        mock_service.stubs(:update_file).raises("update error")
+
+        addon = Addon.new
+        addon.instance_variable_set(:@service, mock_service)
+
+        output = capture_stderr do
+          addon.workspace_did_change_watched_files([{ uri: "file:///tmp/test.rb", type: 2 }])
+        end
+
+        assert_match(/Failed to update file/, output)
+      end
+    end
+  end
+end

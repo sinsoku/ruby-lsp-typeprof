@@ -1,0 +1,5 @@
+module RubyLsp
+  module Typeprof
+    VERSION: String
+  end
+end
