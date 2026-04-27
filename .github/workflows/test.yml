@@ -1,4 +1,4 @@
-name: Ruby
+name: Test
 
 on:
   push:
@@ -14,10 +14,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Ruby ${{ matrix.ruby }}
+    timeout-minutes: 5
     strategy:
+      fail-fast: false
       matrix:
         ruby:
-          - '4.0.2'
+          - '3.3'
+          - '3.4'
+          - '4.0'
 
     steps:
       - uses: actions/checkout@v6
