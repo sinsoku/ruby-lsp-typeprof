@@ -1,3 +1,6 @@
+[![Gem Version](https://badge.fury.io/rb/ruby-lsp-typeprof.svg)](https://badge.fury.io/rb/ruby-lsp-typeprof)
+[![Test](https://github.com/sinsoku/ruby-lsp-typeprof/actions/workflows/test.yml/badge.svg)](https://github.com/sinsoku/ruby-lsp-typeprof/actions/workflows/test.yml)
+
 # TypeProf add-on
 
 The TypeProf add-on is a [Ruby LSP](https://github.com/Shopify/ruby-lsp) [add-on](https://shopify.github.io/ruby-lsp/add-ons.html) to provide type inference features.
