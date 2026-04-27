@@ -1,5 +1,5 @@
 ## [Unreleased]
 
-## [0.1.0] - 2026-03-21
+## [0.1.0] - 2026-04-27
 
-- Initial release
+- feat: Display type declarations using Code Lens
