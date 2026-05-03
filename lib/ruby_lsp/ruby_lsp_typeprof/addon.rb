@@ -13,11 +13,14 @@ module RubyLsp
         super
         @service = nil
         @mutex = Mutex.new
+        @code_lens_enabled = true
       end
 
       def activate(global_state, _outgoing_queue)
         require "typeprof"
 
+        settings = global_state.settings_for_addon(name)
+        @code_lens_enabled = settings&.dig(:enableCodeLens) != false
         @service = build_service(global_state.workspace_path)
       rescue StandardError => e
         warn "ruby-lsp-typeprof: Failed to activate: #{e.message}"
@@ -37,6 +40,7 @@ module RubyLsp
 
       def create_code_lens_listener(response_builder, uri, dispatcher)
         return unless @service
+        return unless @code_lens_enabled
 
         CodeLensListener.new(response_builder, uri, dispatcher, @service, @mutex)
       end

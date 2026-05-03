@@ -17,6 +17,36 @@ end
 
 After running `bundle install`, restart Ruby LSP.
 
+## Configuration
+
+The add-on reads its settings from Ruby LSP's `addonSettings` mechanism.
+Configure them in VS Code's `settings.json`:
+
+```jsonc
+{
+  "rubyLsp.addonSettings": {
+    "TypeProf": {
+      "enableCodeLens": false
+    }
+  }
+}
+```
+
+You can place this configuration in either:
+
+- **Workspace settings** (`.vscode/settings.json` at the repository root) —
+  applies only to this project.
+- **User settings** — applies to every workspace. See
+  [User and Workspace Settings](https://code.visualstudio.com/docs/configure/settings)
+  for the file location on each OS.
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `enableCodeLens` | boolean | `true` | Show inferred type signatures as code lens above method definitions. |
+
+After changing the setting, restart Ruby LSP via the "Ruby LSP: Restart"
+command for it to take effect.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

@@ -54,6 +54,30 @@ module RubyLsp
 
         assert_match(/Failed to update file/, output)
       end
+
+      test "create_code_lens_listener returns nil when code lens is disabled" do
+        addon = Addon.new
+        addon.instance_variable_set(:@service, stub)
+        addon.instance_variable_set(:@code_lens_enabled, false)
+
+        result = addon.create_code_lens_listener(stub, URI("file:///tmp/test.rb"), stub)
+        assert_nil result
+      end
+
+      test "create_code_lens_listener returns a listener when code lens is enabled" do
+        service = stub
+        service.stubs(:code_lens)
+
+        addon = Addon.new
+        addon.instance_variable_set(:@service, service)
+        addon.instance_variable_set(:@code_lens_enabled, true)
+
+        dispatcher = stub
+        dispatcher.stubs(:register)
+
+        listener = addon.create_code_lens_listener(stub, URI("file:///tmp/test.rb"), dispatcher)
+        assert_kind_of CodeLensListener, listener
+      end
     end
   end
 end
