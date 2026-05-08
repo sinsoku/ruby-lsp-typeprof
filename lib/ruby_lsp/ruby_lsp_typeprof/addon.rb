@@ -13,13 +13,17 @@ module RubyLsp
         super
         @service = nil
         @mutex = Mutex.new
+        @enabled = true
         @code_lens_enabled = true
       end
 
       def activate(global_state, _outgoing_queue)
+        settings = global_state.settings_for_addon(name)
+        @enabled = settings&.dig(:enabled) != false
+        return unless @enabled
+
         require "typeprof"
 
-        settings = global_state.settings_for_addon(name)
         @code_lens_enabled = settings&.dig(:enableCodeLens) != false
         @service = build_service(global_state.workspace_path)
       rescue StandardError => e

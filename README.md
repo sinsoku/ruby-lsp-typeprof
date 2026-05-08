@@ -26,6 +26,7 @@ Configure them in VS Code's `settings.json`:
 {
   "rubyLsp.addonSettings": {
     "TypeProf": {
+      "enabled": false,
       "enableCodeLens": false
     }
   }
@@ -42,7 +43,8 @@ You can place this configuration in either:
 
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
-| `enableCodeLens` | boolean | `true` | Show inferred type signatures as code lens above method definitions. |
+| `enabled` | boolean | `true` | Master switch. When `false`, the add-on skips loading TypeProf entirely and disables every feature. |
+| `enableCodeLens` | boolean | `true` | Show inferred type signatures as code lens above method definitions. Has no effect when `enabled` is `false`. |
 
 After changing the setting, restart Ruby LSP via the "Ruby LSP: Restart"
 command for it to take effect.
