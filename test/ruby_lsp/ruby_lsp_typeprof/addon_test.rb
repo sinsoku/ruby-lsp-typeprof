@@ -55,6 +55,34 @@ module RubyLsp
         assert_match(/Failed to update file/, output)
       end
 
+      test "activate skips service initialization when enabled is false" do
+        global_state = stub
+        global_state.stubs(:settings_for_addon).with("TypeProf").returns({ enabled: false })
+
+        output = capture_stderr { @addon.activate(global_state, stub) }
+
+        assert_nil @addon.instance_variable_get(:@service)
+        assert_equal false, @addon.instance_variable_get(:@enabled)
+        assert_empty output
+      end
+
+      test "create_code_lens_listener returns nil when addon is disabled" do
+        addon = Addon.new
+        addon.instance_variable_set(:@enabled, false)
+
+        result = addon.create_code_lens_listener(stub, URI("file:///tmp/test.rb"), stub)
+        assert_nil result
+      end
+
+      test "workspace_did_change_watched_files is no-op when addon is disabled" do
+        addon = Addon.new
+        addon.instance_variable_set(:@enabled, false)
+
+        assert_nothing_raised do
+          addon.workspace_did_change_watched_files([{ uri: "file:///tmp/test.rb", type: 2 }])
+        end
+      end
+
       test "create_code_lens_listener returns nil when code lens is disabled" do
         addon = Addon.new
         addon.instance_variable_set(:@service, stub)
