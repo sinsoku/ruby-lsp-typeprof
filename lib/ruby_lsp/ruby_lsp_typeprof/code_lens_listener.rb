@@ -1,12 +1,17 @@
 # frozen_string_literal: true
 
+require_relative "loggable"
+
 module RubyLsp
   module Typeprof
     class CodeLensListener
-      def initialize(response_builder, uri, dispatcher, service, mutex)
+      include Loggable
+
+      def initialize(response_builder, uri, dispatcher, service, mutex, outgoing_queue)
         @response_builder = response_builder
         @path = uri.to_standardized_path
         @lens_cache = {}
+        @outgoing_queue = outgoing_queue
 
         cache_code_lens_results(service, mutex)
         dispatcher.register(self, :on_def_node_enter) unless @lens_cache.empty?
@@ -38,7 +43,7 @@ module RubyLsp
           end
         end
       rescue StandardError => e
-        warn "ruby-lsp-typeprof: Code lens error: #{e.message}"
+        log_error("Ruby LSP TypeProf failed to compute code lens for #{@path}: #{e.full_message(highlight: false)}")
       end
     end
   end

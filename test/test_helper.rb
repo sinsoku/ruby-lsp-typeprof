@@ -3,7 +3,6 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "ruby_lsp/ruby_lsp_typeprof/addon"
 require "language_server-protocol"
-require "stringio"
 require "ruby_lsp/internal"
 require "ruby_lsp/test_helper"
 require "tmpdir"
@@ -12,22 +11,8 @@ require "fileutils"
 require "test-unit"
 require "mocha/test_unit"
 
-module CaptureStderr
-  private
-
-  def capture_stderr
-    original = $stderr
-    $stderr = StringIO.new
-    yield
-    $stderr.string
-  ensure
-    $stderr = original
-  end
-end
-
 module IntegrationTestHelper
   include RubyLsp::TestHelper
-  include CaptureStderr
 
   private
 

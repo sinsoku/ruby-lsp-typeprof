@@ -15,6 +15,9 @@ Style/StringLiteralsInInterpolation:
 Style/Documentation:
   Enabled: false
 
+Metrics/ParameterLists:
+  Max: 6
+
 Naming/FileName:
   Exclude:
     - "lib/ruby-lsp-typeprof.rb"
