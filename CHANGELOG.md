@@ -1,3 +1,6 @@
+## [v0.3.1](https://github.com/sinsoku/ruby-lsp-typeprof/compare/v0.3.0...v0.3.1) - 2026-05-11
+- feat: Route log output via window/logMessage notifications by @sinsoku in https://github.com/sinsoku/ruby-lsp-typeprof/pull/7
+
 ## [v0.3.0](https://github.com/sinsoku/ruby-lsp-typeprof/compare/v0.2.0...v0.3.0) - 2026-05-08
 - feat: Add enabled setting to toggle the entire add-on by @sinsoku in https://github.com/sinsoku/ruby-lsp-typeprof/pull/5
 
