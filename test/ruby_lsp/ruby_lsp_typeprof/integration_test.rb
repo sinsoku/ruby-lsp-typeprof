@@ -44,9 +44,7 @@ module RubyLsp
           uri = URI("file://#{file_path}")
 
           with_server(source, uri, load_addons: false) do |server, _uri|
-            capture_stderr do
-              setup_workspace_and_addons(server, bad_workspace)
-            end
+            setup_workspace_and_addons(server, bad_workspace)
             response = request_code_lens(server, uri)
 
             assert_empty response

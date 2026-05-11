@@ -5,10 +5,13 @@ require "ruby_lsp/addon"
 require "uri"
 
 require_relative "code_lens_listener"
+require_relative "loggable"
 
 module RubyLsp
   module Typeprof
     class Addon < ::RubyLsp::Addon
+      include Loggable
+
       def initialize
         super
         @service = nil
@@ -17,17 +20,17 @@ module RubyLsp
         @code_lens_enabled = true
       end
 
-      def activate(global_state, _outgoing_queue)
-        settings = global_state.settings_for_addon(name)
-        @enabled = settings&.dig(:enabled) != false
+      def activate(global_state, outgoing_queue)
+        @outgoing_queue = outgoing_queue
+        log_message("Activating Ruby LSP TypeProf add-on v#{VERSION}")
+
+        load_settings(global_state)
         return unless @enabled
 
         require "typeprof"
-
-        @code_lens_enabled = settings&.dig(:enableCodeLens) != false
         @service = build_service(global_state.workspace_path)
       rescue StandardError => e
-        warn "ruby-lsp-typeprof: Failed to activate: #{e.message}"
+        log_error("Ruby LSP TypeProf failed to activate: #{e.full_message(highlight: false)}")
       end
 
       def deactivate
@@ -46,7 +49,7 @@ module RubyLsp
         return unless @service
         return unless @code_lens_enabled
 
-        CodeLensListener.new(response_builder, uri, dispatcher, @service, @mutex)
+        CodeLensListener.new(response_builder, uri, dispatcher, @service, @mutex, @outgoing_queue)
       end
 
       def workspace_did_change_watched_files(changes)
@@ -58,6 +61,12 @@ module RubyLsp
       end
 
       private
+
+      def load_settings(global_state)
+        settings = global_state.settings_for_addon(name)
+        @enabled = settings&.dig(:enabled) != false
+        @code_lens_enabled = settings&.dig(:enableCodeLens) != false
+      end
 
       def build_service(workspace_path)
         conf = load_typeprof_conf(workspace_path) || default_conf
@@ -92,7 +101,7 @@ module RubyLsp
 
         @service.update_file(path, nil)
       rescue StandardError => e
-        warn "ruby-lsp-typeprof: Failed to update file #{path}: #{e.message}"
+        log_error("Ruby LSP TypeProf failed to update file #{path}: #{e.full_message(highlight: false)}")
       end
     end
   end

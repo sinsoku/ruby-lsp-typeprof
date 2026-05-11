@@ -5,10 +5,13 @@ require "test_helper"
 module RubyLsp
   module Typeprof
     class AddonTest < Test::Unit::TestCase
-      include CaptureStderr
-
       def setup
         @addon = Addon.new
+        @outgoing_queue = Thread::Queue.new
+      end
+
+      def teardown
+        @outgoing_queue.close
       end
 
       test "addon has correct name" do
@@ -41,29 +44,55 @@ module RubyLsp
         assert_equal ["/tmp/test.rb"], updated_paths
       end
 
-      test "workspace_did_change_watched_files handles exceptions safely" do
+      test "workspace_did_change_watched_files logs exceptions to outgoing_queue" do
         mock_service = stub(:update_file)
         mock_service.stubs(:update_file).raises("update error")
 
         addon = Addon.new
         addon.instance_variable_set(:@service, mock_service)
+        addon.instance_variable_set(:@outgoing_queue, @outgoing_queue)
 
-        output = capture_stderr do
-          addon.workspace_did_change_watched_files([{ uri: "file:///tmp/test.rb", type: 2 }])
-        end
+        addon.workspace_did_change_watched_files([{ uri: "file:///tmp/test.rb", type: 2 }])
 
-        assert_match(/Failed to update file/, output)
+        notification = @outgoing_queue.pop
+        assert_equal "window/logMessage", notification.method
+        assert_match(/Ruby LSP TypeProf failed to update file/, notification.params.message)
+        assert_equal ::RubyLsp::Constant::MessageType::ERROR, notification.params.type
+      end
+
+      test "activate logs an activation message" do
+        global_state = stub
+        global_state.stubs(:settings_for_addon).with("TypeProf").returns({ enabled: false })
+
+        @addon.activate(global_state, @outgoing_queue)
+
+        notification = @outgoing_queue.pop
+        assert_equal "window/logMessage", notification.method
+        assert_match(/Activating Ruby LSP TypeProf add-on v#{Regexp.escape(VERSION)}/o, notification.params.message)
       end
 
       test "activate skips service initialization when enabled is false" do
         global_state = stub
         global_state.stubs(:settings_for_addon).with("TypeProf").returns({ enabled: false })
 
-        output = capture_stderr { @addon.activate(global_state, stub) }
+        @addon.activate(global_state, @outgoing_queue)
 
         assert_nil @addon.instance_variable_get(:@service)
         assert_equal false, @addon.instance_variable_get(:@enabled)
-        assert_empty output
+      end
+
+      test "activate logs an error notification when activation fails" do
+        global_state = stub
+        global_state.stubs(:settings_for_addon).with("TypeProf").returns({})
+        global_state.stubs(:workspace_path).raises("boom")
+
+        @addon.activate(global_state, @outgoing_queue)
+
+        _activation_log = @outgoing_queue.pop
+        notification = @outgoing_queue.pop
+        assert_equal "window/logMessage", notification.method
+        assert_match(/Ruby LSP TypeProf failed to activate/, notification.params.message)
+        assert_equal ::RubyLsp::Constant::MessageType::ERROR, notification.params.type
       end
 
       test "create_code_lens_listener returns nil when addon is disabled" do
