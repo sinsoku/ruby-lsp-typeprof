@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require "optparse"
 
@@ -23,10 +24,10 @@ Dir.chdir(File.expand_path("..", __dir__)) do
 
   maj, min, pat = current.split(".").map(&:to_i)
   nextver = case bump_kind
-    when :patch then "#{maj}.#{min}.#{pat + 1}"
-    when :minor then "#{maj}.#{min + 1}.0"
-    when :major then "#{maj + 1}.0.0"
-    end
+            when :patch then "#{maj}.#{min}.#{pat + 1}"
+            when :minor then "#{maj}.#{min + 1}.0"
+            when :major then "#{maj + 1}.0.0"
+            end
 
   abort "must be on #{default_branch}" unless `git rev-parse --abbrev-ref HEAD`.strip == default_branch
   abort "working tree not clean" unless `git status --porcelain`.empty?
