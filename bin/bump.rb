@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require "json"
 require "optparse"
 
 VERSION_RE = /VERSION\s*=\s*"([^"]+)"/
@@ -16,9 +15,7 @@ OptionParser.new do |opts|
 end.parse!
 
 Dir.chdir(File.expand_path("..", __dir__)) do
-  info = JSON.parse(`gh repo view --json nameWithOwner,defaultBranchRef`)
-  repo = info.fetch("nameWithOwner")
-  default_branch = info.fetch("defaultBranchRef").fetch("name")
+  default_branch = `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`.strip
 
   version_file = Dir.glob("lib/**/version.rb").first or abort "version.rb not found"
   content = File.read(version_file)
@@ -36,7 +33,7 @@ Dir.chdir(File.expand_path("..", __dir__)) do
 
   branch = default_branch
   if create_branch
-    prev_tag = `gh api repos/#{repo}/tags --jq '.[0].name'`.strip
+    prev_tag = `gh api repos/{owner}/{repo}/tags --jq '.[0].name'`.strip
     abort "no previous tag found" if prev_tag.empty?
     branch = "release-from-#{prev_tag}"
     system("git switch -c #{branch}", exception: true)
