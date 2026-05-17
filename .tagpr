@@ -1,5 +1,0 @@
-[tagpr]
-  vPrefix = true
-  releaseBranch = main
-  versionFile = lib/ruby_lsp_typeprof/version.rb
-  postVersionCommand = BUNDLE_FROZEN=false bundle install

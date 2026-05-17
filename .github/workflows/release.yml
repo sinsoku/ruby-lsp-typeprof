@@ -4,25 +4,21 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
+    paths:
+      - "lib/**/version.rb"
 
 jobs:
-  tagpr:
+  push:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
       id-token: write
-      pull-requests: write
-      issues: read
     environment:
       name: release
       deployment: false
-
     steps:
       - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -30,11 +26,12 @@ jobs:
           bundler-cache: true
           ruby-version: ruby
 
-      - id: tagpr
-        uses: Songmu/tagpr@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push gem
-        if: steps.tagpr.outputs.tag != ''
+      - name: Publish a gem
         uses: rubygems/release-gem@v1
+
+      - name: Create GitHub release
+        run: |
+          tag_name="$(git describe --tags --abbrev=0)"
+          gh release create "${tag_name}" --verify-tag --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
