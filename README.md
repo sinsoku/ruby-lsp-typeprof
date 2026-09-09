@@ -27,7 +27,8 @@ Configure them in VS Code's `settings.json`:
   "rubyLsp.addonSettings": {
     "TypeProf": {
       "enabled": false,
-      "enableCodeLens": false
+      "enableCodeLens": false,
+      "enableDocumentSymbol": false
     }
   }
 }
@@ -45,6 +46,7 @@ You can place this configuration in either:
 | --- | --- | --- | --- |
 | `enabled` | boolean | `true` | Master switch. When `false`, the add-on skips loading TypeProf entirely and disables every feature. |
 | `enableCodeLens` | boolean | `true` | Show inferred type signatures as code lens above method definitions. Has no effect when `enabled` is `false`. |
+| `enableDocumentSymbol` | boolean | `true` | Add inferred type signatures as child symbols of method definitions in the document symbol response, so clients that do not support code lens (for example Claude Code) can see them. Has no effect when `enabled` is `false`. |
 
 After changing the setting, restart Ruby LSP via the "Ruby LSP: Restart"
 command for it to take effect.

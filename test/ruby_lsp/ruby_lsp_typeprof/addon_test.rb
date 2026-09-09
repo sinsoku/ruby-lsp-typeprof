@@ -121,6 +121,45 @@ module RubyLsp
         assert_nil result
       end
 
+      test "create_document_symbol_listener returns nil when addon is disabled" do
+        addon = Addon.new
+        addon.instance_variable_set(:@enabled, false)
+
+        assert_nil addon.create_document_symbol_listener(stub, stub)
+      end
+
+      test "create_document_symbol_listener returns nil when document symbol is disabled" do
+        addon = Addon.new
+        addon.instance_variable_set(:@service, stub)
+        addon.instance_variable_set(:@document_symbol_enabled, false)
+
+        assert_nil addon.create_document_symbol_listener(stub, stub)
+      end
+
+      test "create_document_symbol_listener returns a listener when document symbol is enabled" do
+        service = stub
+        service.stubs(:code_lens)
+
+        addon = Addon.new
+        addon.instance_variable_set(:@service, service)
+        addon.instance_variable_set(:@document_symbol_enabled, true)
+
+        dispatcher = stub(listeners: {})
+
+        listener = addon.create_document_symbol_listener(stub, dispatcher)
+        assert_kind_of DocumentSymbolListener, listener
+      end
+
+      test "activate reads enableDocumentSymbol from addon settings" do
+        global_state = stub
+        global_state.stubs(:settings_for_addon).with("TypeProf")
+                    .returns({ enabled: false, enableDocumentSymbol: false })
+
+        @addon.activate(global_state, @outgoing_queue)
+
+        assert_equal false, @addon.instance_variable_get(:@document_symbol_enabled)
+      end
+
       test "create_code_lens_listener returns a listener when code lens is enabled" do
         service = stub
         service.stubs(:code_lens)

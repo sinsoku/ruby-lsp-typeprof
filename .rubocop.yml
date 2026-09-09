@@ -18,6 +18,10 @@ Style/Documentation:
 Metrics/ParameterLists:
   Max: 6
 
+Metrics/ClassLength:
+  Exclude:
+    - "test/**/*"
+
 Naming/FileName:
   Exclude:
     - "lib/ruby-lsp-typeprof.rb"

@@ -1,25 +1,20 @@
 # frozen_string_literal: true
 
-require_relative "loggable"
+require_relative "signature_cache"
 
 module RubyLsp
   module Typeprof
     class CodeLensListener
-      include Loggable
-
       def initialize(response_builder, uri, dispatcher, service, mutex, outgoing_queue)
         @response_builder = response_builder
-        @path = uri.to_standardized_path
-        @lens_cache = {}
-        @outgoing_queue = outgoing_queue
+        @signatures = SignatureCache.new(service, mutex, uri.to_standardized_path, outgoing_queue, feature: "code lens")
 
-        cache_code_lens_results(service, mutex)
-        dispatcher.register(self, :on_def_node_enter) unless @lens_cache.empty?
+        dispatcher.register(self, :on_def_node_enter) unless @signatures.empty?
       end
 
       def on_def_node_enter(node)
         line = node.location.start_line
-        hint = @lens_cache[line]
+        hint = @signatures[line]
         return unless hint
 
         @response_builder << build_code_lens(line, hint)
@@ -34,16 +29,6 @@ module RubyLsp
           range: LanguageServer::Protocol::Interface::Range.new(start: position, end: position),
           command: LanguageServer::Protocol::Interface::Command.new(title: "#: #{hint}", command: "")
         )
-      end
-
-      def cache_code_lens_results(service, mutex)
-        mutex.synchronize do
-          service.code_lens(@path) do |code_range, hint|
-            @lens_cache[code_range.first.lineno] = hint
-          end
-        end
-      rescue StandardError => e
-        log_error("Ruby LSP TypeProf failed to compute code lens for #{@path}: #{e.full_message(highlight: false)}")
       end
     end
   end

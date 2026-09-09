@@ -5,6 +5,7 @@ require "ruby_lsp/addon"
 require "uri"
 
 require_relative "code_lens_listener"
+require_relative "document_symbol_listener"
 require_relative "loggable"
 
 module RubyLsp
@@ -18,6 +19,7 @@ module RubyLsp
         @mutex = Mutex.new
         @enabled = true
         @code_lens_enabled = true
+        @document_symbol_enabled = true
       end
 
       def activate(global_state, outgoing_queue)
@@ -52,6 +54,13 @@ module RubyLsp
         CodeLensListener.new(response_builder, uri, dispatcher, @service, @mutex, @outgoing_queue)
       end
 
+      def create_document_symbol_listener(response_builder, dispatcher)
+        return unless @service
+        return unless @document_symbol_enabled
+
+        DocumentSymbolListener.new(response_builder, dispatcher, @service, @mutex, @outgoing_queue)
+      end
+
       def workspace_did_change_watched_files(changes)
         return unless @service
 
@@ -66,6 +75,7 @@ module RubyLsp
         settings = global_state.settings_for_addon(name)
         @enabled = settings&.dig(:enabled) != false
         @code_lens_enabled = settings&.dig(:enableCodeLens) != false
+        @document_symbol_enabled = settings&.dig(:enableDocumentSymbol) != false
       end
 
       def build_service(workspace_path)

@@ -17,13 +17,25 @@ module IntegrationTestHelper
   private
 
   def generate_code_lens_for_source(source, workspace_path: nil)
+    with_addon_server(source, workspace_path: workspace_path) do |server, uri|
+      request_code_lens(server, uri)
+    end
+  end
+
+  def generate_document_symbol_for_source(source, workspace_path: nil)
+    with_addon_server(source, workspace_path: workspace_path) do |server, uri|
+      request_document_symbol(server, uri)
+    end
+  end
+
+  def with_addon_server(source, workspace_path: nil)
     Dir.mktmpdir do |tmpdir|
       workspace = workspace_path || tmpdir
       uri = write_source_file(workspace, source)
 
       with_server(source, uri, load_addons: false) do |server, _uri|
         setup_workspace_and_addons(server, workspace)
-        request_code_lens(server, uri)
+        yield server, uri
       end
     end
   end
@@ -44,8 +56,16 @@ module IntegrationTestHelper
   end
 
   def request_code_lens(server, uri)
+    request(server, "textDocument/codeLens", uri)
+  end
+
+  def request_document_symbol(server, uri)
+    request(server, "textDocument/documentSymbol", uri)
+  end
+
+  def request(server, method, uri)
     server.process_message(
-      method: "textDocument/codeLens",
+      method: method,
       id: 1,
       params: { textDocument: { uri: uri.to_s } }
     )
