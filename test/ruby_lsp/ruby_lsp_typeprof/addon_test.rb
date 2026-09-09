@@ -5,6 +5,8 @@ require "test_helper"
 module RubyLsp
   module Typeprof
     class AddonTest < Test::Unit::TestCase
+      include EncodingTestHelper
+
       def setup
         @addon = Addon.new
         @outgoing_queue = Thread::Queue.new
@@ -93,6 +95,54 @@ module RubyLsp
         assert_equal "window/logMessage", notification.method
         assert_match(/Ruby LSP TypeProf failed to activate/, notification.params.message)
         assert_equal ::RubyLsp::Constant::MessageType::ERROR, notification.params.type
+      end
+
+      test "activate reads non-ASCII files when default_external is US-ASCII" do
+        Dir.mktmpdir do |workspace|
+          write_non_ascii_workspace(workspace)
+          global_state = stub
+          global_state.stubs(:settings_for_addon).with("TypeProf").returns({})
+          global_state.stubs(:workspace_path).returns(workspace)
+
+          with_default_external(Encoding::US_ASCII) do
+            @addon.activate(global_state, @outgoing_queue)
+            assert_equal Encoding::US_ASCII, Encoding.default_external
+          end
+
+          refute_nil @addon.instance_variable_get(:@service)
+          _activation_log = @outgoing_queue.pop
+          assert_true @outgoing_queue.empty?, "Expected no error notification"
+        end
+      end
+
+      test "activate restores default_external when activation fails" do
+        global_state = stub
+        global_state.stubs(:settings_for_addon).with("TypeProf").returns({})
+        global_state.stubs(:workspace_path).returns("/nonexistent")
+        @addon.stubs(:build_service).raises("boom")
+
+        with_default_external(Encoding::US_ASCII) do
+          @addon.activate(global_state, @outgoing_queue)
+          assert_equal Encoding::US_ASCII, Encoding.default_external
+        end
+
+        assert_nil @addon.instance_variable_get(:@service)
+      end
+
+      test "workspace_did_change_watched_files updates files with UTF-8 default_external" do
+        encodings = []
+        mock_service = stub(:update_file)
+        mock_service.stubs(:update_file).with { |_path, _code| encodings << Encoding.default_external }
+
+        addon = Addon.new
+        addon.instance_variable_set(:@service, mock_service)
+
+        with_default_external(Encoding::US_ASCII) do
+          addon.workspace_did_change_watched_files([{ uri: "file:///tmp/test.rbs", type: 2 }])
+          assert_equal Encoding::US_ASCII, Encoding.default_external
+        end
+
+        assert_equal [Encoding::UTF_8], encodings
       end
 
       test "create_code_lens_listener returns nil when addon is disabled" do

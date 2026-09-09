@@ -11,6 +11,41 @@ require "fileutils"
 require "test-unit"
 require "mocha/test_unit"
 
+module EncodingTestHelper
+  private
+
+  # Ruby warns on assigning Encoding.default_external under -w, so silence
+  # $VERBOSE while switching it.
+  def with_default_external(encoding)
+    orig = Encoding.default_external
+    silently { Encoding.default_external = encoding }
+    yield
+  ensure
+    silently { Encoding.default_external = orig }
+  end
+
+  def silently
+    verbose = $VERBOSE
+    $VERBOSE = nil
+    yield
+  ensure
+    $VERBOSE = verbose
+  end
+
+  def write_non_ascii_workspace(dir)
+    sig_dir = File.join(dir, "sig")
+    FileUtils.mkdir_p(sig_dir)
+    File.write(File.join(sig_dir, "foo.rbs"), "# 日本語コメント\nclass Foo\n  def bar: () -> String\nend\n", encoding: "UTF-8")
+    File.write(File.join(dir, "typeprof.conf.jsonc"), <<~JSONC, encoding: "UTF-8")
+      {
+        // 日本語コメント
+        "rbs_dir": "sig/",
+        "analysis_unit_dirs": ["."]
+      }
+    JSONC
+  end
+end
+
 module IntegrationTestHelper
   include RubyLsp::TestHelper
 

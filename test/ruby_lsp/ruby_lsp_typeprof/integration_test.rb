@@ -6,6 +6,7 @@ module RubyLsp
   module Typeprof
     class IntegrationTest < Test::Unit::TestCase
       include IntegrationTestHelper
+      include EncodingTestHelper
 
       def teardown
         RubyLsp::Addon.addons.each(&:deactivate)
@@ -69,6 +70,28 @@ module RubyLsp
         class_symbol = response.find { |symbol| symbol.name == "Calc" }
         method_symbol = class_symbol.children.find { |symbol| symbol.name == "add" }
         assert_empty method_symbol.children
+      end
+
+      test "document symbol returns inferred signatures for non-ASCII RBS when default_external is US-ASCII" do
+        source = <<~RUBY
+          class Foo
+            def baz = bar
+          end
+        RUBY
+
+        Dir.mktmpdir do |workspace|
+          write_non_ascii_workspace(workspace)
+
+          response = with_default_external(Encoding::US_ASCII) do
+            generate_document_symbol_for_source(source, workspace_path: workspace)
+          end
+
+          class_symbol = response.find { |symbol| symbol.name == "Foo" }
+          method_symbol = class_symbol.children.find { |symbol| symbol.name == "baz" }
+          signature = method_symbol.children.find { |symbol| symbol.kind == ::RubyLsp::Constant::SymbolKind::TYPE_PARAMETER }
+          refute_nil signature, "Expected a signature child symbol, got: #{method_symbol.children.map(&:name).inspect}"
+          assert_equal "-> String", signature.name
+        end
       end
 
       test "document symbol keeps core symbols when service fails to activate" do
