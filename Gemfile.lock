@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/ruby/typeprof.git
-  revision: 6f94f260132b0bf69a068246124e75ceabb16d43
+  revision: 8cd8c126c3eb3f1a9a0730f64ad7619a2153eb42
   specs:
-    typeprof (0.31.1)
+    typeprof (0.33.2)
       prism (>= 1.4.0)
       rbs (>= 3.6.0)
 
@@ -143,7 +143,7 @@ CHECKSUMS
   stringio (3.2.0) sha256=c37cb2e58b4ffbd33fe5cd948c05934af997b36e0b6ca6fdf43afa234cf222e1
   test-unit (3.7.7) sha256=3c89d5ff0690a16bef9946156c4624390402b9d54dfcf4ce9cbd5b06bead1e45
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
-  typeprof (0.31.1)
+  typeprof (0.33.2)
   unicode-display_width (3.2.0) sha256=0cdd96b5681a5949cdbc2c55e7b420facae74c4aaf9a9815eee1087cb1853c42
   unicode-emoji (4.2.0) sha256=519e69150f75652e40bf736106cfbc8f0f73aa3fb6a65afe62fefa7f80b0f80f
 
