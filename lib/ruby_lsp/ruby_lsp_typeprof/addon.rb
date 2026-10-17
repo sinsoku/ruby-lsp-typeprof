@@ -5,6 +5,7 @@ require "ruby_lsp/addon"
 require "uri"
 
 require_relative "code_lens_listener"
+require_relative "compat"
 require_relative "document_symbol_listener"
 require_relative "loggable"
 
@@ -29,8 +30,9 @@ module RubyLsp
         load_settings(global_state)
         return unless @enabled
 
+        Compat.apply!(self)
         require "typeprof"
-        @service = with_utf8_default_external { build_service(global_state.workspace_path) }
+        @service = build_service(global_state.workspace_path)
       rescue StandardError => e
         log_error("Ruby LSP TypeProf failed to activate: #{e.full_message(highlight: false)}")
       end
@@ -109,24 +111,9 @@ module RubyLsp
         path = URI.parse(change[:uri]).path
         return unless path&.end_with?(".rb", ".rbs")
 
-        with_utf8_default_external { @service.update_file(path, nil) }
+        @service.update_file(path, nil)
       rescue StandardError => e
         log_error("Ruby LSP TypeProf failed to update file #{path}: #{e.full_message(highlight: false)}")
-      end
-
-      # TypeProf reads files with File.read, which follows Encoding.default_external.
-      # Without LANG that is US-ASCII and non-ASCII .rbs files fail to parse.
-      # See ruby/typeprof#479.
-      def with_utf8_default_external
-        orig = Encoding.default_external
-        return yield if orig == Encoding::UTF_8
-
-        Encoding.default_external = Encoding::UTF_8
-        begin
-          yield
-        ensure
-          Encoding.default_external = orig
-        end
       end
     end
   end
